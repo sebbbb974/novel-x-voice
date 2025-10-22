@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extracteur de Chapitres</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #0a0a0f;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at top, rgba(99, 102, 241, 0.15), transparent 60%),
+                radial-gradient(ellipse at bottom, rgba(139, 92, 246, 0.1), transparent 60%);
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(17, 17, 27, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow:
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            position: relative;
+        }
+
+        h1 {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 40px;
+            font-size: 0.95em;
+            font-weight: 400;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        input[type="url"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        input[type="url"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        input[type="url"]::placeholder,
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        input[type="number"] {
+            width: 150px;
+        }
+
+        textarea.filter-input {
+            min-height: 100px;
+            font-size: 13px;
+            resize: vertical;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 5px;
+        }
+
+        .filter-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+
+        .filter-section-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #8b5cf6;
+        }
+
+        .filter-section-header h4 {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .filter-preview {
+            padding: 12px;
+            background: rgba(139, 92, 246, 0.05);
+            border-radius: 12px;
+            font-size: 12px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            max-height: 150px;
+            overflow-y: auto;
+            transition: all 0.3s;
+        }
+
+        .filter-preview.collapsed {
+            display: none;
+        }
+
+        .filter-preview::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .filter-preview::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+
+        .filter-preview::-webkit-scrollbar-thumb {
+            background: #8b5cf6;
+            border-radius: 3px;
+        }
+
+        .filter-tag {
+            display: inline-block;
+            background: rgba(139, 92, 246, 0.2);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 4px 10px;
+            border-radius: 8px;
+            margin: 3px;
+            font-size: 11px;
+            font-weight: 500;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 12px;
+            cursor: pointer;
+            accent-color: #8b5cf6;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .auto-filter-info {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-left: 30px;
+            margin-top: 5px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.2s;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            cursor: not-allowed;
+            transform: none;
+            color: rgba(255, 255, 255, 0.4);
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 15px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(139, 92, 246, 0.2);
+            border-top: 3px solid #8b5cf6;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .stats {
+            background: rgba(139, 92, 246, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .stats p {
+            margin: 8px 0;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .stats strong {
+            color: #a78bfa;
+        }
+
+        .chapter-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+
+        .chapter-list-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #8b5cf6;
+        }
+
+        .chapter-list-header h3 {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .collapse-icon {
+            color: #8b5cf6;
+            font-size: 16px;
+            transition: transform 0.3s;
+        }
+
+        .collapse-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .chapter-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .chapter-list.collapsed {
+            display: none;
+        }
+
+        .chapter-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chapter-list::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+
+        .chapter-list::-webkit-scrollbar-thumb {
+            background: #8b5cf6;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(139, 92, 246, 0.05);
+            border-radius: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            border-left: 2px solid rgba(139, 92, 246, 0.4);
+        }
+
+        #combinedText {
+            width: 100%;
+            min-height: 400px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-family: 'Georgia', serif;
+            font-size: 14px;
+            line-height: 1.8;
+            resize: vertical;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            margin-top: 15px;
+        }
+
+        .copy-btn:hover {
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+        }
+
+        .success-message {
+            display: none;
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .error-message {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 10px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: rgba(17, 17, 27, 0.95);
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 32px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: rgba(255, 255, 255, 1);
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #8b5cf6;
+            border-radius: 3px;
+        }
+
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .secondary-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 20px;
+                border-radius: 16px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+                margin-bottom: 8px;
+            }
+
+            .subtitle {
+                font-size: 0.85em;
+                margin-bottom: 25px;
+            }
+
+            /* Boutons empilés verticalement sur mobile */
+            .input-group div[style*="display: flex"] {
+                flex-direction: column !important;
+                gap: 8px !important;
+            }
+
+            .input-group button {
+                width: 100% !important;
+                padding: 12px 20px !important;
+                font-size: 14px !important;
+            }
+
+            input[type="number"] {
+                width: 100%;
+            }
+
+            .checkbox-group {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 12px;
+            }
+
+            .auto-filter-info {
+                margin-left: 0;
+                margin-top: 8px;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+
+            .modal-header {
+                padding: 16px;
+            }
+
+            .modal-header h2 {
+                font-size: 1.2em;
+            }
+
+            .modal-body {
+                padding: 16px;
+                max-height: 70vh;
+            }
+
+            .modal-footer {
+                padding: 12px 16px;
+            }
+
+            .stats {
+                padding: 15px;
+            }
+
+            .stats p {
+                font-size: 13px;
+            }
+
+            #combinedText {
+                min-height: 300px;
+                font-size: 13px;
+                padding: 15px;
+            }
+
+            .chapter-item {
+                font-size: 12px;
+                padding: 8px;
+            }
+
+            .filter-tag {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .subtitle {
+                font-size: 0.8em;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            input[type="url"],
+            input[type="number"],
+            textarea {
+                font-size: 13px;
+                padding: 10px 14px;
+            }
+
+            button {
+                padding: 12px 18px;
+                font-size: 13px;
+            }
+
+            .modal-header h2 {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📖 La Bibliothèque</h1>
+        <p class="subtitle">Extracteur de chapitres pour vos lectures audio</p>
+
+        <div class="input-group">
+            <label for="url">URL du premier chapitre :</label>
+            <div style="display: flex; gap: 12px; align-items: stretch;">
+                <input type="url" id="url" placeholder="https://exemple.com/chapitre-1" required style="flex: 1;">
+                <button id="extractBtn" onclick="extractChapters()" style="width: auto; margin: 0; white-space: nowrap; padding: 12px 24px;">
+                    🚀 Extraire
+                </button>
+                <button onclick="openFilterModal()" style="width: auto; margin: 0; white-space: nowrap; padding: 12px 24px; font-size: 13px;">
+                    🔧 Filtrer des mots
+                </button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="numChapters">Nombre de chapitres à extraire :</label>
+            <input type="number" id="numChapters" value="10" min="1" max="50">
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="useAutoFilters" checked>
+            <div>
+                <label for="useAutoFilters">Activer les filtres automatiques</label>
+                <div class="auto-filter-info">Supprime automatiquement les éléments de navigation (Next Chapter, Comments, Vote, etc.)</div>
+            </div>
+        </div>
+
+        <!-- Modal pour les filtres -->
+        <div id="filterModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🔧 Filtrer des mots personnalisés</h2>
+                    <button class="close-btn" onclick="closeFilterModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <textarea
+                        id="blacklist"
+                        class="filter-input"
+                        placeholder="Entrez les mots ou phrases à exclure, un par ligne&#10;&#10;Exemple :&#10;Cliquez sur Suivant&#10;Publicité&#10;Abonnez-vous&#10;Partager sur Facebook"
+                        style="min-height: 200px;"></textarea>
+                    <p class="help-text">Ces mots/phrases seront supprimés du texte extrait. Insensible à la casse.</p>
+                    <div id="filterPreviewModal" style="margin-top: 15px;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="closeFilterModal()" class="secondary-btn">Fermer</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Extraction en cours... Veuillez patienter</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="result" id="result">
+            <div class="stats" id="stats"></div>
+
+            <div class="chapter-list-header" onclick="toggleChapterList()">
+                <h3>Liste des chapitres extraits</h3>
+                <span class="collapse-icon" id="collapseIcon">▼</span>
+            </div>
+            <div class="chapter-list collapsed" id="chapterList"></div>
+
+            <textarea id="combinedText" readonly></textarea>
+
+            <button class="copy-btn" onclick="copyToClipboard()">
+                📋 Copier dans le presse-papier
+            </button>
+
+            <div class="success-message" id="successMessage">
+                ✓ Texte copié ! Vous pouvez maintenant le coller dans ElevenLabs Reader
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleChapterList() {
+            const chapterList = document.getElementById('chapterList');
+            const collapseIcon = document.getElementById('collapseIcon');
+
+            chapterList.classList.toggle('collapsed');
+            collapseIcon.classList.toggle('collapsed');
+        }
+
+        function openFilterModal() {
+            document.getElementById('filterModal').classList.add('show');
+            updateFilterPreviewModal();
+        }
+
+        function closeFilterModal() {
+            document.getElementById('filterModal').classList.remove('show');
+        }
+
+        function updateFilterPreviewModal() {
+            const blacklistText = document.getElementById('blacklist').value.trim();
+            const preview = document.getElementById('filterPreviewModal');
+
+            if (blacklistText) {
+                const filters = blacklistText.split('\n').filter(f => f.trim());
+                const tagsHtml = filters.map(f => `<span class="filter-tag">${f}</span>`).join('');
+                preview.innerHTML = `<div style="padding: 15px; background: rgba(139, 92, 246, 0.05); border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.2);"><strong style="color: rgba(255, 255, 255, 0.8);">Filtres actifs (${filters.length}) :</strong><br><br>${tagsHtml}</div>`;
+            } else {
+                preview.innerHTML = '';
+            }
+        }
+
+        // Mettre à jour la preview en temps réel dans la modal
+        document.addEventListener('DOMContentLoaded', function() {
+            const blacklist = document.getElementById('blacklist');
+            if (blacklist) {
+                blacklist.addEventListener('input', updateFilterPreviewModal);
+            }
+
+            // Fermer la modal en cliquant en dehors
+            document.getElementById('filterModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeFilterModal();
+                }
+            });
+        });
+
+        async function extractChapters() {
+            const url = document.getElementById('url').value.trim();
+            const numChapters = parseInt(document.getElementById('numChapters').value);
+            const blacklistText = document.getElementById('blacklist').value.trim();
+            const blacklist = blacklistText ? blacklistText.split('\n').filter(f => f.trim()) : [];
+            const useAutoFilters = document.getElementById('useAutoFilters').checked;
+
+            if (!url) {
+                showError('Veuillez entrer une URL');
+                return;
+            }
+
+            // Reset UI
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('errorMessage').classList.remove('show');
+            document.getElementById('successMessage').classList.remove('show');
+            document.getElementById('extractBtn').disabled = true;
+
+            try {
+                const response = await fetch('/.netlify/functions/extract', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url, numChapters, blacklist, useAutoFilters })
+                });
+
+                // Vérifier si la réponse est vide
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    console.error('Response:', text);
+                    throw new Error('Le serveur Netlify ne répond pas correctement. Vérifiez que les fonctions sont bien déployées.');
+                }
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Erreur lors de l\'extraction');
+                }
+
+                // Afficher les résultats
+                displayResults(data);
+
+            } catch (error) {
+                console.error('Error details:', error);
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    showError('Erreur de connexion. Vérifiez votre connexion internet.');
+                } else if (error.message.includes('JSON')) {
+                    showError('Erreur de communication avec le serveur. La fonction Netlify ne répond pas correctement.');
+                } else {
+                    showError(error.message);
+                }
+            } finally {
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('extractBtn').disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            // Stats
+            let statsHtml = `
+                <p><strong>Chapitres extraits :</strong> ${data.chaptersFound}</p>
+                <p><strong>Caractères totaux :</strong> ${data.combinedText.length.toLocaleString()}</p>
+                <p><strong>Mots approximatifs :</strong> ${Math.round(data.combinedText.split(/\s+/).length).toLocaleString()}</p>
+            `;
+            if (data.filtersApplied > 0) {
+                statsHtml += `<p><strong>Filtres appliqués :</strong> ${data.filtersApplied}`;
+                if (data.autoFiltersEnabled) {
+                    statsHtml += ` (dont filtres automatiques)`;
+                }
+                statsHtml += `</p>`;
+            }
+            document.getElementById('stats').innerHTML = statsHtml;
+
+            // Liste des chapitres
+            const chapterListHtml = data.chapters.map(ch =>
+                `<div class="chapter-item">✓ Chapitre ${ch.number}: ${ch.title}</div>`
+            ).join('');
+            document.getElementById('chapterList').innerHTML = chapterListHtml;
+
+            // Texte combiné
+            document.getElementById('combinedText').value = data.combinedText;
+
+            // Afficher le résultat
+            document.getElementById('result').classList.add('show');
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('combinedText');
+            text.select();
+            document.execCommand('copy');
+
+            const successMsg = document.getElementById('successMessage');
+            successMsg.classList.add('show');
+
+            setTimeout(() => {
+                successMsg.classList.remove('show');
+            }, 3000);
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = '❌ ' + message;
+            errorDiv.classList.add('show');
+        }
+
+        // Permettre de soumettre avec Entrée
+        document.getElementById('url').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                extractChapters();
+            }
+        });
+    </script>
+</body>
+</html>

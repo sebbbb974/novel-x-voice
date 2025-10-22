@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm start)",
+      "Bash(npm install:*)",
+      "Bash(pkill:*)",
+      "Bash(killall:*)",
+      "Bash(awk:*)",
+      "Bash(xargs kill:*)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)",
+      "Read(//Users/sebastienrode/**)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
