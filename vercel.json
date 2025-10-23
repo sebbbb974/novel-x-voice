@@ -1,4 +1,7 @@
 {
+  "buildCommand": null,
+  "installCommand": null,
+  "framework": null,
   "functions": {
     "api/extract.js": {
       "maxDuration": 10
