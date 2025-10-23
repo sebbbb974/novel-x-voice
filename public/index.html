@@ -983,19 +983,18 @@
                     🔧 Filtrer des mots
                 </button>
             </div>
+            <!-- Checkbox compacte juste en dessous -->
+            <div style="margin-top: 10px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255, 255, 255, 0.7); cursor: pointer;">
+                    <input type="checkbox" id="useAutoFilters" checked style="width: 16px; height: 16px; cursor: pointer; accent-color: #8b5cf6;">
+                    <span>Filtres automatiques (supprime navigation, commentaires, etc.)</span>
+                </label>
+            </div>
         </div>
 
         <div class="input-group">
             <label for="numChapters">Nombre de chapitres à extraire :</label>
             <input type="number" id="numChapters" value="10" min="1" max="50">
-        </div>
-
-        <div class="checkbox-group">
-            <input type="checkbox" id="useAutoFilters" checked>
-            <div>
-                <label for="useAutoFilters">Activer les filtres automatiques</label>
-                <div class="auto-filter-info">Supprime automatiquement les éléments de navigation (Next Chapter, Comments, Vote, etc.)</div>
-            </div>
         </div>
 
         <!-- Modal pour les filtres -->
@@ -1491,9 +1490,10 @@
             document.getElementById('extractBtn').disabled = true;
 
             try {
-                // Détection automatique du base path
-                const basePath = window.location.pathname.includes('/novelxvoice') ? '/novelxvoice' : '';
-                const response = await fetch(`${basePath}/extract`, {
+                // Sur Vercel, l'API est à /api/extract
+                // Sur o2switch avec BASE_PATH, ce serait /novelxvoice/extract
+                const apiEndpoint = '/api/extract';
+                const response = await fetch(apiEndpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
