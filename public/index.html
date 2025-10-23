@@ -1491,7 +1491,9 @@
             document.getElementById('extractBtn').disabled = true;
 
             try {
-                const response = await fetch('/api/extract', {
+                // Détection automatique du base path
+                const basePath = window.location.pathname.includes('/novelxvoice') ? '/novelxvoice' : '';
+                const response = await fetch(`${basePath}/extract`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

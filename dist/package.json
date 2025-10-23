@@ -1,0 +1,11 @@
+{
+  "name": "novel-x-voice-netlify",
+  "version": "1.0.0",
+  "description": "Novel x Voice - Extracteur et lecteur audio de romans web (Netlify)",
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "jsdom": "^24.1.3"
+  }
+}

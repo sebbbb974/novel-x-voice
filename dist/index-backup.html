@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novel x Voice</title>
+    <title>Extracteur de Chapitres</title>
     <style>
         * {
             margin: 0;
@@ -969,7 +969,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>📖 Novel x Voice</h1>
+        <h1>📖 La Bibliothèque</h1>
         <p class="subtitle">Extracteur de chapitres pour vos lectures audio</p>
 
         <div class="input-group">
@@ -1037,8 +1037,9 @@
             <div class="chapter-list collapsed" id="chapterList"></div>
 
             <!-- Zone de texte avec surlignement pour TTS -->
-            <div id="combinedText" style="width: 100%; min-height: 500px; max-height: 700px; padding: 35px 40px; background: linear-gradient(135deg, rgba(17, 17, 27, 0.95) 0%, rgba(25, 25, 40, 0.98) 100%); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 16px; font-family: 'Merriweather', 'Georgia', serif; font-size: 16px; line-height: 2; letter-spacing: 0.3px; color: rgba(255, 255, 255, 0.95); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05); overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;">
-                Chargement...
+            <div class="text-display-wrapper">
+                <div id="highlightedText" class="highlighted-text"></div>
+                <textarea id="combinedText" readonly></textarea>
             </div>
 
             <!-- Contrôles TTS -->
@@ -1099,15 +1100,9 @@
                 </div>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
-                <button class="copy-btn" onclick="copyToClipboard()" style="flex: 1; min-width: 200px;">
-                    📋 Copier
-                </button>
-
-                <button onclick="openInReader()" style="flex: 1; min-width: 200px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; border: none; padding: 14px 28px; font-size: 14px; border-radius: 12px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);">
-                    📖 Ouvrir dans le lecteur
-                </button>
-            </div>
+            <button class="copy-btn" onclick="copyToClipboard()">
+                📋 Copier dans le presse-papier
+            </button>
 
             <div class="success-message" id="successMessage">
                 ✓ Texte copié ! Vous pouvez maintenant le coller dans ElevenLabs Reader
@@ -1116,16 +1111,12 @@
     </div>
 
     <script src="TextToSpeech.js"></script>
-    <script src="library.js"></script>
     <script>
-        // Instances globales
+        // Instance globale du TTS
         let tts = null;
-        let library = null;
-        let lastExtractedData = null;
 
-        // Initialiser le TTS et la bibliothèque au chargement
+        // Initialiser le TTS au chargement de la page
         document.addEventListener('DOMContentLoaded', function() {
-            library = new Library();
             if (TextToSpeech.isSupported()) {
                 tts = new TextToSpeech();
 
@@ -1142,7 +1133,7 @@
                 tts.onResume = onTTSResume;
                 tts.onError = onTTSError;
 
-                // Activer le surlignement amélioré
+                // Callback pour le surlignement
                 tts.setHighlightCallback(highlightWord);
             } else {
                 console.warn('La synthèse vocale n\'est pas supportée par ce navigateur');
@@ -1206,12 +1197,13 @@
 
         // Fonction pour surligner le mot en cours de lecture
         function highlightWord(charIndex, word) {
-            const textDiv = document.getElementById('combinedText');
+            const textarea = document.getElementById('combinedText');
+            const highlightDiv = document.getElementById('highlightedText');
 
             if (charIndex === -1) {
-                // Fin de la lecture, restaurer le texte original
-                textDiv.innerHTML = escapeHtml(textDiv.textContent);
-                textDiv.style.color = 'rgba(255, 255, 255, 0.95)';
+                // Fin de la lecture, nettoyer le surlignement
+                highlightDiv.innerHTML = '';
+                textarea.classList.remove('reading-mode');
                 lastCharIndex = -1;
                 return;
             }
@@ -1219,20 +1211,21 @@
             // Throttling : limiter les mises à jour trop fréquentes
             const now = Date.now();
             if (now - lastHighlightTime < HIGHLIGHT_THROTTLE && charIndex !== lastCharIndex) {
-                return;
+                return; // Ignorer cette mise à jour
             }
             lastHighlightTime = now;
             lastCharIndex = charIndex;
 
-            // Estomper le texte
-            textDiv.style.color = 'rgba(255, 255, 255, 0.35)';
+            // Activer le mode lecture
+            textarea.classList.add('reading-mode');
 
-            const text = textDiv.textContent;
+            const text = textarea.value;
 
-            // Trouver les limites du mot actuel
+            // Trouver les limites du mot actuel (éviter de surligner partiellement)
             let wordStart = charIndex;
             let wordEnd = charIndex + word.length;
 
+            // Ajuster pour prendre le mot complet
             while (wordStart > 0 && /\S/.test(text[wordStart - 1])) {
                 wordStart--;
             }
@@ -1246,15 +1239,17 @@
 
             // Utiliser requestAnimationFrame pour une animation fluide
             requestAnimationFrame(() => {
-                textDiv.innerHTML = escapeHtml(before) +
-                    '<span class="highlight">' + escapeHtml(highlighted) + '</span>' +
-                    escapeHtml(after);
+                // Créer le HTML avec le mot surligné
+                const escapedBefore = escapeHtml(before);
+                const escapedHighlighted = escapeHtml(highlighted);
+                const escapedAfter = escapeHtml(after);
 
-                // Défilement automatique
-                const highlightSpan = textDiv.querySelector('.highlight');
-                if (highlightSpan) {
-                    highlightSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                highlightDiv.innerHTML = escapedBefore +
+                    '<span class="highlight">' + escapedHighlighted + '</span>' +
+                    escapedAfter;
+
+                // Défilement automatique pour suivre le mot
+                scrollToHighlight(wordStart, text);
             });
         }
 
@@ -1318,7 +1313,7 @@
         function startReading() {
             if (!tts) return;
 
-            let text = document.getElementById('combinedText').textContent;
+            let text = document.getElementById('combinedText').value;
             if (!text || text.trim().length === 0) {
                 alert('Aucun texte à lire. Veuillez d\'abord extraire des chapitres.');
                 return;
@@ -1491,8 +1486,7 @@
             document.getElementById('extractBtn').disabled = true;
 
             try {
-                // Pour Netlify: utiliser /api/extract
-                const response = await fetch('/api/extract', {
+                const response = await fetch('/extract', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1528,9 +1522,6 @@
         }
 
         function displayResults(data) {
-            // Sauvegarder les données pour l'ouvrir dans le lecteur
-            lastExtractedData = data;
-
             // Stats
             let statsHtml = `
                 <p><strong>Chapitres extraits :</strong> ${data.chaptersFound}</p>
@@ -1553,52 +1544,15 @@
             document.getElementById('chapterList').innerHTML = chapterListHtml;
 
             // Texte combiné
-            document.getElementById('combinedText').textContent = data.combinedText;
+            document.getElementById('combinedText').value = data.combinedText;
 
             // Afficher le résultat
             document.getElementById('result').classList.add('show');
         }
 
-        function openInReader() {
-            if (!lastExtractedData) {
-                alert('Aucun contenu à ouvrir. Veuillez d\'abord extraire des chapitres.');
-                return;
-            }
-
-            // Créer un objet livre pour le lecteur avec les chapitres formatés
-            const formattedChapters = lastExtractedData.chapters.map(ch => ({
-                number: ch.number,
-                title: ch.title,
-                content: ch.content,
-                url: ch.url
-            }));
-
-            const bookData = {
-                id: 'temp_' + Date.now(),
-                title: formattedChapters[0]?.title || 'Sans titre',
-                url: document.getElementById('url').value,
-                chapters: formattedChapters,
-                combinedText: lastExtractedData.combinedText,
-                currentChapterIndex: 0,
-                createdAt: Date.now()
-            };
-
-            console.log('Sauvegarde du livre:', bookData); // Debug
-
-            // Sauvegarder dans le localStorage
-            if (library) {
-                library.setCurrentBook(bookData);
-            } else {
-                localStorage.setItem('current-book', JSON.stringify(bookData));
-            }
-
-            // Rediriger vers le lecteur
-            window.location.href = '/reader.html';
-        }
-
         function copyToClipboard() {
             const textElement = document.getElementById('combinedText');
-            let text = textElement.textContent;
+            let text = textElement.value;
 
             // Nettoyer le texte des caractères parasites
             text = cleanTextForCopy(text);
