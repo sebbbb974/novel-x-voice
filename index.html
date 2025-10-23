@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novel x Voice</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #0a0a0f;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at top, rgba(99, 102, 241, 0.15), transparent 60%),
+                radial-gradient(ellipse at bottom, rgba(139, 92, 246, 0.1), transparent 60%);
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(17, 17, 27, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow:
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            position: relative;
+        }
+
+        h1 {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 40px;
+            font-size: 0.95em;
+            font-weight: 400;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        input[type="url"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        input[type="url"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        input[type="url"]::placeholder,
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        input[type="number"] {
+            width: 150px;
+        }
+
+        textarea.filter-input {
+            min-height: 100px;
+            font-size: 13px;
+            resize: vertical;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 5px;
+        }
+
+        .filter-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+
+        .filter-section-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #8b5cf6;
+        }
+
+        .filter-section-header h4 {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .filter-preview {
+            padding: 12px;
+            background: rgba(139, 92, 246, 0.05);
+            border-radius: 12px;
+            font-size: 12px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            max-height: 150px;
+            overflow-y: auto;
+            transition: all 0.3s;
+        }
+
+        .filter-preview.collapsed {
+            display: none;
+        }
+
+        .filter-preview::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .filter-preview::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+
+        .filter-preview::-webkit-scrollbar-thumb {
+            background: #8b5cf6;
+            border-radius: 3px;
+        }
+
+        .filter-tag {
+            display: inline-block;
+            background: rgba(139, 92, 246, 0.2);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 4px 10px;
+            border-radius: 8px;
+            margin: 3px;
+            font-size: 11px;
+            font-weight: 500;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 12px;
+            cursor: pointer;
+            accent-color: #8b5cf6;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .auto-filter-info {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-left: 30px;
+            margin-top: 5px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.2s;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            cursor: not-allowed;
+            transform: none;
+            color: rgba(255, 255, 255, 0.4);
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 15px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(139, 92, 246, 0.2);
+            border-top: 3px solid #8b5cf6;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .stats {
+            background: rgba(139, 92, 246, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .stats p {
+            margin: 8px 0;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .stats strong {
+            color: #a78bfa;
+        }
+
+        .chapter-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+
+        .chapter-list-header:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #8b5cf6;
+        }
+
+        .chapter-list-header h3 {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .collapse-icon {
+            color: #8b5cf6;
+            font-size: 16px;
+            transition: transform 0.3s;
+        }
+
+        .collapse-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .chapter-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .chapter-list.collapsed {
+            display: none;
+        }
+
+        .chapter-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chapter-list::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+
+        .chapter-list::-webkit-scrollbar-thumb {
+            background: #8b5cf6;
+            border-radius: 3px;
+        }
+
+        .chapter-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(139, 92, 246, 0.05);
+            border-radius: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            border-left: 2px solid rgba(139, 92, 246, 0.4);
+        }
+
+        .text-display-wrapper {
+            position: relative;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .highlighted-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 500px;
+            padding: 35px 40px;
+            font-family: 'Merriweather', 'Georgia', serif;
+            font-size: 16px;
+            line-height: 2;
+            color: transparent;
+            pointer-events: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .highlighted-text .highlight {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.35) 0%, rgba(255, 180, 0, 0.4) 100%);
+            color: rgba(255, 255, 255, 1);
+            padding: 3px 6px;
+            border-radius: 6px;
+            box-shadow: 0 2px 12px rgba(255, 215, 0, 0.5);
+            transition: all 0.2s ease-in-out;
+            font-weight: 500;
+        }
+
+        #combinedText {
+            position: relative;
+            width: 100%;
+            min-height: 500px;
+            max-height: 700px;
+            padding: 35px 40px;
+            background: linear-gradient(135deg, rgba(17, 17, 27, 0.95) 0%, rgba(25, 25, 40, 0.98) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 16px;
+            font-family: 'Merriweather', 'Georgia', serif;
+            font-size: 16px;
+            line-height: 2;
+            letter-spacing: 0.3px;
+            resize: vertical;
+            color: rgba(255, 255, 255, 0.95);
+            z-index: 0;
+            box-shadow:
+                0 10px 40px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        #combinedText:focus {
+            outline: none;
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow:
+                0 15px 50px rgba(0, 0, 0, 0.5),
+                0 0 20px rgba(139, 92, 246, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        #combinedText.reading-mode {
+            color: rgba(255, 255, 255, 0.35);
+            background: linear-gradient(135deg, rgba(10, 10, 15, 0.98) 0%, rgba(15, 15, 25, 0.98) 100%);
+        }
+
+        /* Scrollbar personnalisée pour la zone de texte */
+        #combinedText::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        #combinedText::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+
+        #combinedText::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+            border-radius: 5px;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+        }
+
+        #combinedText::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #a78bfa 0%, #c4b5fd 100%);
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            margin-top: 15px;
+        }
+
+        .copy-btn:hover {
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+        }
+
+        .success-message {
+            display: none;
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        /* TTS Controls */
+        .tts-controls {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .tts-main-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .tts-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 13px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            white-space: nowrap;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .tts-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .tts-btn:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.4);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .tts-btn.play-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .tts-btn.play-btn:hover:not(:disabled) {
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .tts-btn.stop-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .tts-btn.stop-btn:hover:not(:disabled) {
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .tts-btn.settings-btn {
+            min-width: 50px;
+            flex: 0;
+            padding: 10px 15px;
+        }
+
+        .tts-settings {
+            display: none;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tts-settings.show {
+            display: block;
+        }
+
+        .tts-setting-row {
+            margin-bottom: 15px;
+        }
+
+        .tts-setting-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .tts-setting-row label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .tts-setting-row select,
+        .tts-setting-row input[type="range"] {
+            width: 100%;
+        }
+
+        .tts-setting-row select {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .tts-setting-row select:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .tts-setting-row input[type="range"] {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .tts-setting-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tts-setting-row input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
+        }
+
+        .tts-setting-row input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .tts-setting-row input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
+        }
+
+        .tts-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 15px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .tts-animation {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .wave {
+            display: inline-block;
+            width: 4px;
+            height: 20px;
+            background: #10b981;
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        .wave:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .wave:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .wave:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes wave {
+            0%, 100% {
+                height: 10px;
+                opacity: 0.5;
+            }
+            50% {
+                height: 25px;
+                opacity: 1;
+            }
+        }
+
+        .tts-status-text {
+            color: #34d399;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .error-message {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 10px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: rgba(17, 17, 27, 0.95);
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 32px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: rgba(255, 255, 255, 1);
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #8b5cf6;
+            border-radius: 3px;
+        }
+
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .secondary-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 20px;
+                border-radius: 16px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+                margin-bottom: 8px;
+            }
+
+            .subtitle {
+                font-size: 0.85em;
+                margin-bottom: 25px;
+            }
+
+            /* Boutons empilés verticalement sur mobile */
+            .input-group div[style*="display: flex"] {
+                flex-direction: column !important;
+                gap: 8px !important;
+            }
+
+            .input-group button {
+                width: 100% !important;
+                padding: 12px 20px !important;
+                font-size: 14px !important;
+            }
+
+            input[type="number"] {
+                width: 100%;
+            }
+
+            .checkbox-group {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 12px;
+            }
+
+            .auto-filter-info {
+                margin-left: 0;
+                margin-top: 8px;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+
+            .modal-header {
+                padding: 16px;
+            }
+
+            .modal-header h2 {
+                font-size: 1.2em;
+            }
+
+            .modal-body {
+                padding: 16px;
+                max-height: 70vh;
+            }
+
+            .modal-footer {
+                padding: 12px 16px;
+            }
+
+            .stats {
+                padding: 15px;
+            }
+
+            .stats p {
+                font-size: 13px;
+            }
+
+            #combinedText {
+                min-height: 350px;
+                max-height: 500px;
+                font-size: 14px;
+                padding: 20px 25px;
+                line-height: 1.9;
+            }
+
+            .highlighted-text {
+                min-height: 350px;
+                padding: 20px 25px;
+                font-size: 14px;
+                line-height: 1.9;
+            }
+
+            .chapter-item {
+                font-size: 12px;
+                padding: 8px;
+            }
+
+            .filter-tag {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+
+            .tts-main-controls {
+                flex-direction: column;
+            }
+
+            .tts-btn {
+                min-width: 100%;
+            }
+
+            .tts-btn.settings-btn {
+                min-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .subtitle {
+                font-size: 0.8em;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            input[type="url"],
+            input[type="number"],
+            textarea {
+                font-size: 13px;
+                padding: 10px 14px;
+            }
+
+            button {
+                padding: 12px 18px;
+                font-size: 13px;
+            }
+
+            .modal-header h2 {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📖 Novel x Voice</h1>
+        <p class="subtitle">Extracteur de chapitres pour vos lectures audio</p>
+
+        <div class="input-group">
+            <label for="url">URL du premier chapitre :</label>
+            <div style="display: flex; gap: 12px; align-items: stretch;">
+                <input type="url" id="url" placeholder="https://exemple.com/chapitre-1" required style="flex: 1;">
+                <button id="extractBtn" onclick="extractChapters()" style="width: auto; margin: 0; white-space: nowrap; padding: 12px 24px;">
+                    🚀 Extraire
+                </button>
+                <button onclick="openFilterModal()" style="width: auto; margin: 0; white-space: nowrap; padding: 12px 24px; font-size: 13px;">
+                    🔧 Filtrer des mots
+                </button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="numChapters">Nombre de chapitres à extraire :</label>
+            <input type="number" id="numChapters" value="10" min="1" max="50">
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="useAutoFilters" checked>
+            <div>
+                <label for="useAutoFilters">Activer les filtres automatiques</label>
+                <div class="auto-filter-info">Supprime automatiquement les éléments de navigation (Next Chapter, Comments, Vote, etc.)</div>
+            </div>
+        </div>
+
+        <!-- Modal pour les filtres -->
+        <div id="filterModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🔧 Filtrer des mots personnalisés</h2>
+                    <button class="close-btn" onclick="closeFilterModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <textarea
+                        id="blacklist"
+                        class="filter-input"
+                        placeholder="Entrez les mots ou phrases à exclure, un par ligne&#10;&#10;Exemple :&#10;Cliquez sur Suivant&#10;Publicité&#10;Abonnez-vous&#10;Partager sur Facebook"
+                        style="min-height: 200px;"></textarea>
+                    <p class="help-text">Ces mots/phrases seront supprimés du texte extrait. Insensible à la casse.</p>
+                    <div id="filterPreviewModal" style="margin-top: 15px;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="closeFilterModal()" class="secondary-btn">Fermer</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Extraction en cours... Veuillez patienter</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="result" id="result">
+            <div class="stats" id="stats"></div>
+
+            <div class="chapter-list-header" onclick="toggleChapterList()">
+                <h3>Liste des chapitres extraits</h3>
+                <span class="collapse-icon" id="collapseIcon">▼</span>
+            </div>
+            <div class="chapter-list collapsed" id="chapterList"></div>
+
+            <!-- Zone de texte avec surlignement pour TTS -->
+            <div id="combinedText" style="width: 100%; min-height: 500px; max-height: 700px; padding: 35px 40px; background: linear-gradient(135deg, rgba(17, 17, 27, 0.95) 0%, rgba(25, 25, 40, 0.98) 100%); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 16px; font-family: 'Merriweather', 'Georgia', serif; font-size: 16px; line-height: 2; letter-spacing: 0.3px; color: rgba(255, 255, 255, 0.95); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05); overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;">
+                Chargement...
+            </div>
+
+            <!-- Contrôles TTS -->
+            <div class="tts-controls" id="ttsControls">
+                <div class="tts-main-controls">
+                    <button class="tts-btn play-btn" id="playBtn" onclick="startReading()" title="Lire à voix haute">
+                        🔊 Lire à voix haute
+                    </button>
+                    <button class="tts-btn pause-btn" id="pauseBtn" onclick="pauseReading()" disabled title="Pause">
+                        ⏸️ Pause
+                    </button>
+                    <button class="tts-btn resume-btn" id="resumeBtn" onclick="resumeReading()" disabled title="Reprendre">
+                        ▶️ Reprendre
+                    </button>
+                    <button class="tts-btn stop-btn" id="stopBtn" onclick="stopReading()" disabled title="Arrêter">
+                        ⏹️ Arrêter
+                    </button>
+                    <button class="tts-btn settings-btn" onclick="toggleTTSSettings()" title="Paramètres">
+                        ⚙️
+                    </button>
+                </div>
+
+                <!-- Panneau de paramètres TTS -->
+                <div class="tts-settings" id="ttsSettings">
+                    <div class="tts-setting-row">
+                        <label for="languageSelect">🌐 Langue :</label>
+                        <select id="languageSelect" onchange="changeLanguage()">
+                            <option value="fr-FR">🇫🇷 Français</option>
+                            <option value="en-US">🇺🇸 English (US)</option>
+                        </select>
+                    </div>
+                    <div class="tts-setting-row">
+                        <label for="voiceSelect">🎙️ Voix :</label>
+                        <select id="voiceSelect" onchange="changeVoice()"></select>
+                    </div>
+                    <div class="tts-setting-row">
+                        <label for="rateSlider">⚡ Vitesse : <span id="rateValue">1.0</span>x</label>
+                        <input type="range" id="rateSlider" min="0.5" max="2.0" step="0.1" value="1.0" oninput="changeRate()">
+                    </div>
+                    <div class="tts-setting-row">
+                        <label for="pitchSlider">🎵 Tonalité : <span id="pitchValue">1.0</span></label>
+                        <input type="range" id="pitchSlider" min="0.5" max="2.0" step="0.1" value="1.0" oninput="changePitch()">
+                    </div>
+                    <div class="tts-setting-row">
+                        <label for="volumeSlider">🔉 Volume : <span id="volumeValue">100</span>%</label>
+                        <input type="range" id="volumeSlider" min="0" max="100" step="5" value="100" oninput="changeVolume()">
+                    </div>
+                </div>
+
+                <!-- Indicateur de lecture -->
+                <div class="tts-status" id="ttsStatus" style="display: none;">
+                    <div class="tts-animation">
+                        <span class="wave"></span>
+                        <span class="wave"></span>
+                        <span class="wave"></span>
+                    </div>
+                    <span class="tts-status-text">Lecture en cours...</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                <button class="copy-btn" onclick="copyToClipboard()" style="flex: 1; min-width: 200px;">
+                    📋 Copier
+                </button>
+
+                <button onclick="openInReader()" style="flex: 1; min-width: 200px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; border: none; padding: 14px 28px; font-size: 14px; border-radius: 12px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);">
+                    📖 Ouvrir dans le lecteur
+                </button>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                ✓ Texte copié ! Vous pouvez maintenant le coller dans ElevenLabs Reader
+            </div>
+        </div>
+    </div>
+
+    <script src="TextToSpeech.js"></script>
+    <script src="library.js"></script>
+    <script>
+        // Instances globales
+        let tts = null;
+        let library = null;
+        let lastExtractedData = null;
+
+        // Initialiser le TTS et la bibliothèque au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            library = new Library();
+            if (TextToSpeech.isSupported()) {
+                tts = new TextToSpeech();
+
+                // Charger les voix disponibles
+                setTimeout(() => {
+                    loadVoices();
+                    restoreTTSSettings();
+                }, 100);
+
+                // Callbacks
+                tts.onStart = onTTSStart;
+                tts.onEnd = onTTSEnd;
+                tts.onPause = onTTSPause;
+                tts.onResume = onTTSResume;
+                tts.onError = onTTSError;
+
+                // Activer le surlignement amélioré
+                tts.setHighlightCallback(highlightWord);
+            } else {
+                console.warn('La synthèse vocale n\'est pas supportée par ce navigateur');
+                document.getElementById('ttsControls').style.display = 'none';
+            }
+        });
+
+        function loadVoices() {
+            if (!tts) return;
+
+            const lang = tts.settings.lang;
+            const voices = tts.getVoicesByLanguage(lang);
+            const voiceSelect = document.getElementById('voiceSelect');
+            voiceSelect.innerHTML = '';
+
+            if (voices.length === 0) {
+                voiceSelect.innerHTML = '<option>Aucune voix disponible</option>';
+                return;
+            }
+
+            voices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.name;
+                option.textContent = `${voice.name} (${voice.lang})`;
+
+                if (tts.selectedVoice && voice.name === tts.selectedVoice.name) {
+                    option.selected = true;
+                }
+
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        function changeLanguage() {
+            if (!tts) return;
+
+            const lang = document.getElementById('languageSelect').value;
+            tts.setLanguage(lang);
+            loadVoices();
+        }
+
+        function restoreTTSSettings() {
+            if (!tts) return;
+
+            document.getElementById('languageSelect').value = tts.settings.lang;
+
+            document.getElementById('rateSlider').value = tts.settings.rate;
+            document.getElementById('rateValue').textContent = tts.settings.rate.toFixed(1);
+
+            document.getElementById('pitchSlider').value = tts.settings.pitch;
+            document.getElementById('pitchValue').textContent = tts.settings.pitch.toFixed(1);
+
+            document.getElementById('volumeSlider').value = Math.round(tts.settings.volume * 100);
+            document.getElementById('volumeValue').textContent = Math.round(tts.settings.volume * 100);
+        }
+
+        // Variables pour le throttling du surlignement
+        let lastHighlightTime = 0;
+        let lastCharIndex = -1;
+        const HIGHLIGHT_THROTTLE = 100; // Limite à 10 highlights par seconde
+
+        // Fonction pour surligner le mot en cours de lecture
+        function highlightWord(charIndex, word) {
+            const textDiv = document.getElementById('combinedText');
+
+            if (charIndex === -1) {
+                // Fin de la lecture, restaurer le texte original
+                textDiv.innerHTML = escapeHtml(textDiv.textContent);
+                textDiv.style.color = 'rgba(255, 255, 255, 0.95)';
+                lastCharIndex = -1;
+                return;
+            }
+
+            // Throttling : limiter les mises à jour trop fréquentes
+            const now = Date.now();
+            if (now - lastHighlightTime < HIGHLIGHT_THROTTLE && charIndex !== lastCharIndex) {
+                return;
+            }
+            lastHighlightTime = now;
+            lastCharIndex = charIndex;
+
+            // Estomper le texte
+            textDiv.style.color = 'rgba(255, 255, 255, 0.35)';
+
+            const text = textDiv.textContent;
+
+            // Trouver les limites du mot actuel
+            let wordStart = charIndex;
+            let wordEnd = charIndex + word.length;
+
+            while (wordStart > 0 && /\S/.test(text[wordStart - 1])) {
+                wordStart--;
+            }
+            while (wordEnd < text.length && /\S/.test(text[wordEnd])) {
+                wordEnd++;
+            }
+
+            const before = text.substring(0, wordStart);
+            const highlighted = text.substring(wordStart, wordEnd);
+            const after = text.substring(wordEnd);
+
+            // Utiliser requestAnimationFrame pour une animation fluide
+            requestAnimationFrame(() => {
+                textDiv.innerHTML = escapeHtml(before) +
+                    '<span class="highlight">' + escapeHtml(highlighted) + '</span>' +
+                    escapeHtml(after);
+
+                // Défilement automatique
+                const highlightSpan = textDiv.querySelector('.highlight');
+                if (highlightSpan) {
+                    highlightSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        }
+
+        // Fonction pour faire défiler automatiquement vers le mot surligné
+        function scrollToHighlight(charIndex, text) {
+            const textarea = document.getElementById('combinedText');
+            const textBeforeHighlight = text.substring(0, charIndex);
+
+            // Calculer approximativement la position du scroll
+            const lines = textBeforeHighlight.split('\n').length;
+            const lineHeight = 1.8 * 14; // line-height * font-size
+            const scrollPosition = (lines - 5) * lineHeight; // -5 pour centrer un peu
+
+            // Faire défiler en douceur
+            textarea.scrollTo({
+                top: Math.max(0, scrollPosition),
+                behavior: 'smooth'
+            });
+        }
+
+        // Fonction pour échapper le HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Fonction pour nettoyer le texte avant la lecture TTS
+        function cleanTextForReading(text) {
+            // Supprimer les lignes de séparateurs (━, ─, ═, etc.)
+            text = text.replace(/^[━─═\-]{3,}$/gm, '');
+
+            // Supprimer les lignes "CHAPITRE X" ou "CHAPTER X" (seules sur leur ligne)
+            text = text.replace(/^\s*(CHAPITRE|CHAPTER|Chapter)\s*\d+\s*$/gim, '');
+
+            // Supprimer les lignes du type "Chapter 200 of the Exiled"
+            text = text.replace(/^Chapter\s+\d+\s+of\s+the\s+.+$/gim, '');
+
+            // Supprimer les titres en Title Case seuls sur une ligne (max 6 mots)
+            // Ex: "Nine Star Hegemon Body Arts"
+            text = text.replace(/^([A-Z][a-z]+\s){1,5}[A-Z][a-z]+\s*$/gm, '');
+
+            // Supprimer les lignes qui sont juste des numéros
+            text = text.replace(/^\s*\d+\s*$/gm, '');
+
+            // Supprimer les lignes vides multiples (plus de 2)
+            text = text.replace(/\n{3,}/g, '\n\n');
+
+            // Supprimer les espaces multiples
+            text = text.replace(/[ \t]{2,}/g, ' ');
+
+            // Supprimer les espaces en début/fin de ligne
+            text = text.split('\n').map(line => line.trim()).join('\n');
+
+            // Supprimer les espaces en début/fin du texte entier
+            text = text.trim();
+
+            return text;
+        }
+
+        function startReading() {
+            if (!tts) return;
+
+            let text = document.getElementById('combinedText').textContent;
+            if (!text || text.trim().length === 0) {
+                alert('Aucun texte à lire. Veuillez d\'abord extraire des chapitres.');
+                return;
+            }
+
+            // Nettoyer le texte avant la lecture
+            text = cleanTextForReading(text);
+
+            if (!text || text.trim().length === 0) {
+                alert('Aucun contenu à lire après nettoyage.');
+                return;
+            }
+
+            tts.speak(text);
+        }
+
+        function pauseReading() {
+            if (tts) {
+                tts.pause();
+            }
+        }
+
+        function resumeReading() {
+            if (tts) {
+                tts.resume();
+            }
+        }
+
+        function stopReading() {
+            if (tts) {
+                tts.stop();
+                updateTTSButtons(false, false);
+            }
+        }
+
+        function changeVoice() {
+            if (!tts) return;
+
+            const voiceName = document.getElementById('voiceSelect').value;
+            tts.setVoice(voiceName);
+        }
+
+        function changeRate() {
+            if (!tts) return;
+
+            const rate = parseFloat(document.getElementById('rateSlider').value);
+            document.getElementById('rateValue').textContent = rate.toFixed(1);
+            tts.setRate(rate);
+        }
+
+        function changePitch() {
+            if (!tts) return;
+
+            const pitch = parseFloat(document.getElementById('pitchSlider').value);
+            document.getElementById('pitchValue').textContent = pitch.toFixed(1);
+            tts.setPitch(pitch);
+        }
+
+        function changeVolume() {
+            if (!tts) return;
+
+            const volume = parseInt(document.getElementById('volumeSlider').value);
+            document.getElementById('volumeValue').textContent = volume;
+            tts.setVolume(volume / 100);
+        }
+
+        function toggleTTSSettings() {
+            const settings = document.getElementById('ttsSettings');
+            settings.classList.toggle('show');
+        }
+
+        function updateTTSButtons(isPlaying, isPaused) {
+            document.getElementById('playBtn').disabled = isPlaying;
+            document.getElementById('pauseBtn').disabled = !isPlaying || isPaused;
+            document.getElementById('resumeBtn').disabled = !isPaused;
+            document.getElementById('stopBtn').disabled = !isPlaying;
+
+            const status = document.getElementById('ttsStatus');
+            if (isPlaying && !isPaused) {
+                status.style.display = 'flex';
+            } else {
+                status.style.display = 'none';
+            }
+        }
+
+        function onTTSStart() {
+            updateTTSButtons(true, false);
+        }
+
+        function onTTSEnd() {
+            updateTTSButtons(false, false);
+        }
+
+        function onTTSPause() {
+            updateTTSButtons(true, true);
+        }
+
+        function onTTSResume() {
+            updateTTSButtons(true, false);
+        }
+
+        function onTTSError(error) {
+            console.error('Erreur TTS:', error);
+            updateTTSButtons(false, false);
+            showError('Erreur lors de la lecture audio: ' + error.error);
+        }
+
+        function toggleChapterList() {
+            const chapterList = document.getElementById('chapterList');
+            const collapseIcon = document.getElementById('collapseIcon');
+
+            chapterList.classList.toggle('collapsed');
+            collapseIcon.classList.toggle('collapsed');
+        }
+
+        function openFilterModal() {
+            document.getElementById('filterModal').classList.add('show');
+            updateFilterPreviewModal();
+        }
+
+        function closeFilterModal() {
+            document.getElementById('filterModal').classList.remove('show');
+        }
+
+        function updateFilterPreviewModal() {
+            const blacklistText = document.getElementById('blacklist').value.trim();
+            const preview = document.getElementById('filterPreviewModal');
+
+            if (blacklistText) {
+                const filters = blacklistText.split('\n').filter(f => f.trim());
+                const tagsHtml = filters.map(f => `<span class="filter-tag">${f}</span>`).join('');
+                preview.innerHTML = `<div style="padding: 15px; background: rgba(139, 92, 246, 0.05); border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.2);"><strong style="color: rgba(255, 255, 255, 0.8);">Filtres actifs (${filters.length}) :</strong><br><br>${tagsHtml}</div>`;
+            } else {
+                preview.innerHTML = '';
+            }
+        }
+
+        // Mettre à jour la preview en temps réel dans la modal
+        document.addEventListener('DOMContentLoaded', function() {
+            const blacklist = document.getElementById('blacklist');
+            if (blacklist) {
+                blacklist.addEventListener('input', updateFilterPreviewModal);
+            }
+
+            // Fermer la modal en cliquant en dehors
+            document.getElementById('filterModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeFilterModal();
+                }
+            });
+        });
+
+        async function extractChapters() {
+            const url = document.getElementById('url').value.trim();
+            const numChapters = parseInt(document.getElementById('numChapters').value);
+            const blacklistText = document.getElementById('blacklist').value.trim();
+            const blacklist = blacklistText ? blacklistText.split('\n').filter(f => f.trim()) : [];
+            const useAutoFilters = document.getElementById('useAutoFilters').checked;
+
+            if (!url) {
+                showError('Veuillez entrer une URL');
+                return;
+            }
+
+            // Reset UI
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('errorMessage').classList.remove('show');
+            document.getElementById('successMessage').classList.remove('show');
+            document.getElementById('extractBtn').disabled = true;
+
+            try {
+                const response = await fetch('/api/extract', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url, numChapters, blacklist, useAutoFilters })
+                });
+
+                // Vérifier si la réponse est vide
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    throw new Error('Le serveur ne répond pas correctement. Assurez-vous que le serveur Node.js est démarré (npm start).');
+                }
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Erreur lors de l\'extraction');
+                }
+
+                // Afficher les résultats
+                displayResults(data);
+
+            } catch (error) {
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    showError('Impossible de se connecter au serveur. Vérifiez que le serveur est démarré avec "npm start".');
+                } else {
+                    showError(error.message);
+                }
+            } finally {
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('extractBtn').disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            // Sauvegarder les données pour l'ouvrir dans le lecteur
+            lastExtractedData = data;
+
+            // Stats
+            let statsHtml = `
+                <p><strong>Chapitres extraits :</strong> ${data.chaptersFound}</p>
+                <p><strong>Caractères totaux :</strong> ${data.combinedText.length.toLocaleString()}</p>
+                <p><strong>Mots approximatifs :</strong> ${Math.round(data.combinedText.split(/\s+/).length).toLocaleString()}</p>
+            `;
+            if (data.filtersApplied > 0) {
+                statsHtml += `<p><strong>Filtres appliqués :</strong> ${data.filtersApplied}`;
+                if (data.autoFiltersEnabled) {
+                    statsHtml += ` (dont filtres automatiques)`;
+                }
+                statsHtml += `</p>`;
+            }
+            document.getElementById('stats').innerHTML = statsHtml;
+
+            // Liste des chapitres
+            const chapterListHtml = data.chapters.map(ch =>
+                `<div class="chapter-item">✓ Chapitre ${ch.number}: ${ch.title}</div>`
+            ).join('');
+            document.getElementById('chapterList').innerHTML = chapterListHtml;
+
+            // Texte combiné
+            document.getElementById('combinedText').textContent = data.combinedText;
+
+            // Afficher le résultat
+            document.getElementById('result').classList.add('show');
+        }
+
+        function openInReader() {
+            if (!lastExtractedData) {
+                alert('Aucun contenu à ouvrir. Veuillez d\'abord extraire des chapitres.');
+                return;
+            }
+
+            // Créer un objet livre pour le lecteur avec les chapitres formatés
+            const formattedChapters = lastExtractedData.chapters.map(ch => ({
+                number: ch.number,
+                title: ch.title,
+                content: ch.content,
+                url: ch.url
+            }));
+
+            const bookData = {
+                id: 'temp_' + Date.now(),
+                title: formattedChapters[0]?.title || 'Sans titre',
+                url: document.getElementById('url').value,
+                chapters: formattedChapters,
+                combinedText: lastExtractedData.combinedText,
+                currentChapterIndex: 0,
+                createdAt: Date.now()
+            };
+
+            console.log('Sauvegarde du livre:', bookData); // Debug
+
+            // Sauvegarder dans le localStorage
+            if (library) {
+                library.setCurrentBook(bookData);
+            } else {
+                localStorage.setItem('current-book', JSON.stringify(bookData));
+            }
+
+            // Rediriger vers le lecteur
+            window.location.href = '/reader.html';
+        }
+
+        function copyToClipboard() {
+            const textElement = document.getElementById('combinedText');
+            let text = textElement.textContent;
+
+            // Nettoyer le texte des caractères parasites
+            text = cleanTextForCopy(text);
+
+            // Utiliser l'API Clipboard moderne
+            navigator.clipboard.writeText(text).then(() => {
+                const successMsg = document.getElementById('successMessage');
+                successMsg.classList.add('show');
+
+                setTimeout(() => {
+                    successMsg.classList.remove('show');
+                }, 3000);
+            }).catch(err => {
+                // Fallback avec l'ancienne méthode si l'API Clipboard échoue
+                const tempTextarea = document.createElement('textarea');
+                tempTextarea.value = text;
+                document.body.appendChild(tempTextarea);
+                tempTextarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempTextarea);
+
+                const successMsg = document.getElementById('successMessage');
+                successMsg.classList.add('show');
+
+                setTimeout(() => {
+                    successMsg.classList.remove('show');
+                }, 3000);
+            });
+        }
+
+        function cleanTextForCopy(text) {
+            // Supprimer les caractères invisibles et de contrôle
+            text = text.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+
+            // Supprimer les espaces insécables et autres espaces spéciaux
+            text = text.replace(/[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ');
+
+            // Supprimer les caractères de direction de texte (RTL/LTR markers)
+            text = text.replace(/[\u200E\u200F\u202A-\u202E]/g, '');
+
+            // Supprimer les zero-width characters (caractères de largeur nulle)
+            text = text.replace(/[\u200B-\u200D\uFEFF]/g, '');
+
+            // Supprimer les soft hyphens et autres traits d'union invisibles
+            text = text.replace(/\u00AD/g, '');
+
+            // Normaliser les guillemets et apostrophes
+            text = text.replace(/[\u2018\u2019]/g, "'");  // Guillemets simples courbes -> droits
+            text = text.replace(/[\u201C\u201D]/g, '"');  // Guillemets doubles courbes -> droits
+
+            // Normaliser les tirets
+            text = text.replace(/[\u2013\u2014]/g, '-');  // Em dash et en dash -> tiret normal
+
+            // Normaliser les points de suspension
+            text = text.replace(/\u2026/g, '...');
+
+            // Supprimer les caractères combinés orphelins (accents sans lettre)
+            text = text.replace(/[\u0300-\u036F]/g, '');
+
+            // Normaliser les retours à la ligne (CRLF -> LF)
+            text = text.replace(/\r\n/g, '\n');
+            text = text.replace(/\r/g, '\n');
+
+            // Supprimer les lignes vides multiples (plus de 2 lignes vides consécutives)
+            text = text.replace(/\n{4,}/g, '\n\n\n');
+
+            // Supprimer les espaces en début et fin de lignes
+            text = text.split('\n').map(line => line.trim()).join('\n');
+
+            // Supprimer les espaces multiples
+            text = text.replace(/ {2,}/g, ' ');
+
+            // Supprimer les tabulations
+            text = text.replace(/\t/g, ' ');
+
+            return text;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = '❌ ' + message;
+            errorDiv.classList.add('show');
+        }
+
+        // Permettre de soumettre avec Entrée
+        document.getElementById('url').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                extractChapters();
+            }
+        });
+    </script>
+</body>
+</html>
