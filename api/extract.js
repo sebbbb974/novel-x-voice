@@ -388,7 +388,8 @@ module.exports = async (req, res) => {
             break;
           }
 
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Pause réduite à 300ms pour respecter le timeout Vercel (10s max)
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
 
       } catch (error) {
